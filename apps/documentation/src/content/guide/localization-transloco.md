@@ -16,8 +16,7 @@ Choose Transloco when users switch language inside the app, or when you already 
 translation files and tooling. Choose Angular's `i18n` when the language follows the device and a
 reload on change is acceptable.
 
-The pieces below were checked on iOS and Android with Transloco, and the render and language
-switch in the fake Fabric of `@ng-native/testing`. Transloco itself needs no change: it touches
+Transloco itself needs no change: it touches
 `window` only behind `typeof` guards. Three things differ from a web app, and each has a section
 below:
 
@@ -26,7 +25,7 @@ below:
   [inline loader](https://jsverse.gitbook.io/transloco/advanced-features/lazy-load/inline-loaders).
 - `getBrowserLang()` returns `undefined`, so read the device's language with
   [`Locale`](/packages/expo/locale) (`expo-localization`) and choose the first language yourself.
-- A route's `title` is never read, so the title strategy has nothing to do.
+- The native header does not show a route's `title`, so a title strategy has nothing to show.
 
 ## Install
 
@@ -162,14 +161,15 @@ so translate in the template, or in an event handler.
 When a component needs a translated string for a prop, translate it where the prop is bound:
 
 ```html
-<text-field [label]="'form.name' | transloco" />
+<text-input [placeholder]="'form.name' | transloco" />
 <pressable [accessibilityLabel]="'common.close' | transloco" (press)="close()" />
 ```
 
 ### Screen titles
 
-The ng-native router never reads a route's `title`: a screen's title is an input of the header.
-`provideTranslocoTitleStrategy()` therefore has no visible effect (the document stub makes
+Angular still resolves a route's `title` into `ActivatedRoute.snapshot.title`, but the native header
+does not show it: a screen's title is an input of the header. `provideTranslocoTitleStrategy()`
+therefore has no visible effect (the document stub makes
 `Title.setTitle` a no-op that does not throw). Do not use it, and bind the title yourself:
 
 ```html
@@ -299,7 +299,7 @@ export class App {
 }
 ```
 
-Components of ng-native that mirror themselves, such as sliders and chevron icons, read the
+A `modal` reads its layout direction from the
 [`Direction`](/packages/device/direction) service, whose default source asks the device. The device
 language cannot change while the app runs, and says nothing of a language picked in your settings,
 so point the source at Transloco:
@@ -391,10 +391,7 @@ import { ngNative } from '@ng-native/testing/vitest';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  plugins: [ngNative()],
-  test: {
-    server: { deps: { inline: [/@jsverse\/transloco/] } },
-  },
+  plugins: [ngNative({ inline: [/\/node_modules\/@jsverse\/transloco/] })],
 });
 ```
 
@@ -419,7 +416,7 @@ scope has loaded, so wait for the text and do not read it on the first tick.
 
 ## Known limits
 
-- A page title means nothing on ng-native, so there is no title strategy to configure. See
+- The native header does not show a route's title, so there is no title strategy to configure. See
   [Screen titles](#screen-titles).
 - `Intl.PluralRules`, `Intl.RelativeTimeFormat` and `Intl.ListFormat` are missing from Hermes, so
   code that calls them directly throws on device. Transloco and its messageformat plugin do not.
