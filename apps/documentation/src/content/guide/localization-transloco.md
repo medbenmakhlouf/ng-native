@@ -125,7 +125,23 @@ them. A forgotten scope shows its keys, not a blank.
 
 ## Translate in a template
 
-Use the `transloco` pipe or the structural directive. Both work inside `<text>`:
+Use the `transloco` pipe or the structural directive. Both work inside `<text>`. They are
+standalone, so import `TranslocoPipe` and `TranslocoDirective` in the component that uses them:
+
+```ts
+import { Component, signal } from '@angular/core';
+import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
+import { Text } from '@ng-native/components';
+
+@Component({
+  selector: 'app-settings',
+  imports: [Text, TranslocoPipe, TranslocoDirective],
+  templateUrl: './settings.html',
+})
+export class Settings {
+  protected readonly name = signal('Sam');
+}
+```
 
 ```html
 <text>{{ 'settings.title' | transloco }}</text>
@@ -180,11 +196,13 @@ import { getItem } from 'expo-secure-store';
 
 const SUPPORTED = ['en', 'fr', 'ar'];
 
-export function pickLanguage(stored: string | null, deviceLocales: readonly string[]): string {
+export function pickLanguage(
+  stored: string | null,
+  deviceLanguages: readonly (string | null)[],
+): string {
   if (stored && SUPPORTED.includes(stored)) return stored;
-  const device = deviceLocales
-    .map((l) => l.slice(0, 2).toLowerCase())
-    .find((l) => SUPPORTED.includes(l));
+  // A device locale can have no language code, so skip those.
+  const device = deviceLanguages.find((code) => code != null && SUPPORTED.includes(code));
   return device ?? 'en';
 }
 
