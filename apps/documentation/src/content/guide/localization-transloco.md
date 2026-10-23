@@ -1,15 +1,16 @@
 ---
 title: Localization with Transloco
-summary: Switch language at runtime with no reload, using Transloco's scopes, an inline loader that Metro can bundle, and the device's own direction.
+summary: Switch language at runtime with no reload, using Transloco scopes and an inline loader.
 ---
 
 # Localization with Transloco
 
 [Localization](/guide/localization) uses Angular's `i18n`, which fixes the language when the app
-starts: changing it means reloading the JavaScript. [Transloco](https://jsverse.gitbook.io/transloco)
-looks keys up in a dictionary at runtime instead, so an in-app language picker takes effect on the
-next frame, with no reload and no mixed-language screens. The cost is that you write a key for each
-text and keep a JSON file per language, where `i18n` extracts the source text for you.
+starts: changing it means reloading the JavaScript.
+[Transloco](https://jsverse.gitbook.io/transloco) looks keys up in a dictionary at runtime instead,
+so an in-app language picker takes effect on the next frame, with no reload and no mixed-language
+screens. The cost is that you write a key for each text and keep a JSON file per language, where
+`i18n` extracts the source text for you.
 
 Choose Transloco when users switch language inside the app, or when you already have Transloco
 translation files and tooling. Choose Angular's `i18n` when the language follows the device and a
@@ -66,10 +67,10 @@ On the web, Transloco fetches `assets/i18n/<lang>.json` over HTTP. On a device t
 fetch, and Metro resolves `import()` paths at build time, so a path computed from the language
 (``import(`./i18n/${lang}.json`)``) cannot be bundled. Write one literal `import()` per language.
 
-For a feature's own texts, give the feature a scope with an
-[inline loader](https://jsverse.gitbook.io/transloco/advanced-features/lazy-load/inline-loaders), in the providers of
-its route. It is the same place a scope is declared on the web, and it needs no central list of
-files:
+For a feature's own texts, give the feature a scope with an [inline
+loader](https://jsverse.gitbook.io/transloco/advanced-features/lazy-load/inline-loaders), in the
+providers of its route. It is the same place a scope is declared on the web, and it needs no central
+list of files:
 
 ```ts
 // settings.routes.ts
@@ -267,11 +268,11 @@ restart the JavaScript.
 
 ## Follow the language with the layout direction
 
-Translating to a right-to-left language changes the text, not the layout: views stay left-aligned until something
-sets a direction. Bind `direction` on the root view from the active language. The cascade mirrors
-paint and layout for every view under it, so a language change needs no restart. React Native's
-`I18nManager.forceRTL` does need one, so do not use it for this. Keep the list of your app's
-right-to-left languages in one place, and derive the direction from it:
+Translating to a right-to-left language changes the text, not the layout: views stay left-aligned
+until something sets a direction. Bind `direction` on the root view from the active language. The
+cascade mirrors paint and layout for every view under it, so a language change needs no restart.
+React Native's `I18nManager.forceRTL` does need one, so do not use it for this. Keep the list of
+your app's right-to-left languages in one place, and derive the direction from it:
 
 ```ts
 // language-direction.ts
@@ -286,7 +287,7 @@ export function isRtl(lang: string | undefined): boolean {
 import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoService } from '@jsverse/transloco';
-import { isRtl } from './language-direction';
+import { isRtl } from './language-direction.ts';
 
 @Component({
   selector: 'app-root',
@@ -307,7 +308,7 @@ so point the source at Transloco:
 import { inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { Direction, type DirectionSource, type LayoutDirection } from '@ng-native/device';
-import { isRtl } from './language-direction';
+import { isRtl } from './language-direction.ts';
 
 function languageDirectionSource(transloco: TranslocoService): DirectionSource {
   const current = (): LayoutDirection => (isRtl(transloco.getActiveLang()) ? 'rtl' : 'ltr');
@@ -348,7 +349,8 @@ polyfill. The runtime does call `Intl.NumberFormat` for number arguments, which 
 `transloco-keys-manager` and `transloco-validator` read source files, so they work on ng-native
 templates as they are. A key is found in these forms, all verified inside native templates:
 
-- `{{ 'key' | transloco }}` in a `<text>` or as a prop binding, such as `[title]="'key' | transloco"`
+- `{{ 'key' | transloco }}` in a `<text>` or as a prop binding, such as
+  `[title]="'key' | transloco"`
 - `*transloco="let t"` with `t('key')`
 - a ternary of two literals, such as `(cond ? 'a.b' : 'a.c') | transloco`
 - a `marker()` call in TypeScript
@@ -363,12 +365,12 @@ import { type TranslocoGlobalConfig } from '@jsverse/transloco-utils';
 const config: TranslocoGlobalConfig = {
   rootTranslationsPath: 'src/i18n/',
   langs: ['en', 'fr', 'ar'],
+  scopePathMap: {
+    settings: 'src/features/settings/i18n/settings',
+  },
   keysManager: {
     input: ['src'],
     output: 'src/i18n',
-    scopePathMap: {
-      settings: 'src/features/settings/i18n/settings',
-    },
   },
 };
 
@@ -426,6 +428,6 @@ scope has loaded, so wait for the text and do not read it on the first tick.
   differently. Pass `numberingSystem` and `calendar` explicitly where the two must match. See
   [Formatting and right to left](/guide/localization-formatting).
 - Moving to Transloco from Angular's `i18n` is a rewrite of the texts, not of the build: the two
-  do not read each other's files. Transloco has a
-  [migration guide from Angular's i18n](https://jsverse.gitbook.io/transloco/migration-guides/migrate-from-angulars-i18n)
+  do not read each other's files. Transloco has a migration guide from Angular's `i18n`
+  ([link](https://jsverse.gitbook.io/transloco/migration-guides/migrate-from-angulars-i18n))
   for the web; the steps for the texts apply to a native app too.
